@@ -1,0 +1,23 @@
+# systemd unit: keeps the app running on EC2 and restarts it after reboots.
+# Copy to /etc/systemd/system/smartfood.service, then:
+#   sudo systemctl daemon-reload && sudo systemctl enable --now smartfood
+# After editing this file or .env:  sudo systemctl restart smartfood
+[Unit]
+Description=Smart Food Rescue (Gunicorn)
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/smart-food-rescue
+EnvironmentFile=/home/ubuntu/smart-food-rescue/.env
+# Creates /var/log/smartfood owned by ubuntu. The CloudWatch agent ships these files to CloudWatch Logs.
+LogsDirectory=smartfood
+Environment=LOG_FILE=/var/log/smartfood/app.log
+ExecStart=/home/ubuntu/smart-food-rescue/venv/bin/gunicorn -w 3 -b 127.0.0.1:8000 \
+    --access-logfile /var/log/smartfood/access.log \
+    --error-logfile /var/log/smartfood/error.log \
+    run:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}My requests · Smart Food Rescue{% endblock %}
+{% block content %}
+<h2 class="h4 mb-3">My pickup requests</h2>
+{% for r in requests %}
+<div class="card mb-3"><div class="card-body d-flex gap-3">
+  {% if r.image_key %}<img class="thumb" src="{{ file_url(r.image_key) }}" alt="{{ r.food_name }}">{% endif %}
+  <div class="flex-grow-1">
+    <div class="d-flex justify-content-between flex-wrap gap-2">
+      <h3 class="h5 mb-1">{{ r.food_name }} <small class="text-muted">· {{ r.quantity }} meals</small></h3>
+      <div>Request {{ badge(r.status) }} {% if r.status == 'approved' %}· Donation {{ badge(r.listing_status) }}{% endif %}</div>
+    </div>
+    <div class="small text-muted"><i class="bi bi-shop"></i> {{ r.donor_org }} · <i class="bi bi-geo-alt"></i> {{ r.location }} · by {{ r.available_until|dt }}</div>
+    {% if r.status == 'approved' %}
+      <div class="small mt-1"><i class="bi bi-telephone"></i> Contact donor: {{ r.donor_phone or r.donor_email }}</div>
+      {% if r.listing_status == 'approved' %}
+      <form class="mt-2" method="post" action="{{ url_for('ngo.picked_up', req_id=r.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-sm btn-primary"><i class="bi bi-truck"></i> Mark as picked up</button>
+      </form>
+      {% endif %}
+    {% endif %}
+  </div>
+</div></div>
+{% else %}
+<div class="alert alert-light border">No requests yet. <a href="{{ url_for('ngo.browse') }}">Browse available food</a>.</div>
+{% endfor %}
+{% endblock %}

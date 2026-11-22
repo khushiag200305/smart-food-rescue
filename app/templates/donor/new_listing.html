@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Donate food · Smart Food Rescue{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-8">
+  <div class="card"><div class="card-body p-4">
+    <h2 class="h4 mb-3">List surplus food</h2>
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row">
+        <div class="col-md-8 mb-3"><label class="form-label">Food name</label>
+          <input class="form-control" name="food_name" value="{{ form.get('food_name', '') }}" placeholder="Rice, dal and mixed veg" required></div>
+        <div class="col-md-4 mb-3"><label class="form-label">Type</label>
+          <select class="form-select" name="food_type">
+            {% for v, label in [('veg','Veg'), ('non-veg','Non-veg'), ('mixed','Mixed')] %}
+              <option value="{{ v }}" {% if form.get('food_type') == v %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select></div>
+        <div class="col-md-4 mb-3"><label class="form-label">Quantity (meals)</label>
+          <input class="form-control" type="number" min="1" name="quantity" value="{{ form.get('quantity', '') }}" required></div>
+        <div class="col-md-8 mb-3"><label class="form-label">Available until</label>
+          <input class="form-control" type="datetime-local" name="available_until" value="{{ form.get('available_until', '') }}" required></div>
+      </div>
+      <div class="mb-3"><label class="form-label">Pickup location</label>
+        <input class="form-control" name="location" value="{{ form.get('location', '') }}" placeholder="Hostel J Mess, Patiala" required></div>
+      <div class="mb-3"><label class="form-label">Description <small class="text-muted">(optional)</small></label>
+        <textarea class="form-control" name="description" rows="3" placeholder="Cooked at 7 PM, packed in steel containers…">{{ form.get('description', '') }}</textarea></div>
+      <div class="mb-3"><label class="form-label">Photo <small class="text-muted">(PNG/JPG/WEBP, max 5 MB · stored in AWS S3)</small></label>
+        <input class="form-control" type="file" name="image" accept="image/*" required></div>
+      <button class="btn btn-success w-100"><i class="bi bi-upload"></i> Publish donation</button>
+    </form>
+  </div></div>
+</div></div>
+{% endblock %}

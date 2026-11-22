@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Browse food · Smart Food Rescue{% endblock %}
+{% block content %}
+{% if not current_user.is_verified %}
+  <div class="alert alert-warning"><i class="bi bi-hourglass-split"></i> Your NGO is awaiting admin verification. You can browse now and request food once verified.</div>
+{% endif %}
+
+<form class="row g-2 mb-4" method="get">
+  <div class="col-md-5"><input class="form-control" name="location" placeholder="Search by location" value="{{ filters.get('location', '') }}"></div>
+  <div class="col-md-3"><select class="form-select" name="food_type">
+    <option value="">Any food type</option>
+    {% for v, label in [('veg','Veg'), ('non-veg','Non-veg'), ('mixed','Mixed')] %}
+      <option value="{{ v }}" {% if filters.get('food_type') == v %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select></div>
+  <div class="col-md-2"><input class="form-control" type="number" min="1" name="min_qty" placeholder="Min meals" value="{{ filters.get('min_qty', '') }}"></div>
+  <div class="col-md-2"><button class="btn btn-success w-100"><i class="bi bi-search"></i> Search</button></div>
+</form>
+
+<div class="row g-3">
+  {% for l in listings %}
+  <div class="col-md-6 col-lg-4"><div class="card h-100">
+    {% if l.image_key %}<img class="card-img-top food-img" src="{{ file_url(l.image_key) }}" alt="{{ l.food_name }}">{% endif %}
+    <div class="card-body d-flex flex-column">
+      <div class="d-flex justify-content-between"><h3 class="h5">{{ l.food_name }}</h3>{{ badge(l.status) }}</div>
+      <p class="mb-1"><i class="bi bi-people"></i> {{ l.quantity }} meals · {{ l.food_type }}</p>
+      <p class="mb-1 small"><i class="bi bi-shop"></i> {{ l.donor_org }}</p>
+      <p class="mb-1 small"><i class="bi bi-geo-alt"></i> {{ l.location }}</p>
+      <p class="mb-2 small text-danger"><i class="bi bi-clock"></i> Pick up by {{ l.available_until|dt }}</p>
+      {% if l.description %}<p class="small text-muted">{{ l.description }}</p>{% endif %}
+      <div class="mt-auto">
+        {% if l.my_request %}
+          <div class="text-center">Your request: {{ badge(l.my_request) }}</div>
+        {% else %}
+        <form method="post" action="{{ url_for('ngo.make_request', food_id=l.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input class="form-control form-control-sm mb-2" name="message" maxlength="500" placeholder="Note to donor (e.g. pickup ETA)">
+          <button class="btn btn-success w-100" {% if not current_user.is_verified %}disabled{% endif %}>Request pickup</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div></div>
+  {% else %}
+  <div class="col-12"><div class="alert alert-light border">No food available right now matching your search. Check back soon.</div></div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="p-5 mb-4 bg-white rounded-3 border">
+  <h1 class="display-6">Surplus food shouldn't go to waste.</h1>
+  <p class="lead">College messes, restaurants and hotels list leftover food. Verified NGOs request it and pick it up, all through one cloud-hosted platform.</p>
+  {% if current_user %}
+    <a class="btn btn-success btn-lg" href="{{ url_for('main.dashboard') }}">Go to my dashboard</a>
+  {% else %}
+    <a class="btn btn-success btn-lg" href="{{ url_for('auth.register') }}">Get started</a>
+    <a class="btn btn-outline-success btn-lg" href="{{ url_for('auth.login') }}">Log in</a>
+  {% endif %}
+</div>
+
+<div class="row g-3 text-center">
+  {% for label, value in [('Meals donated', stats.meals), ('Completed pickups', stats.completed),
+                          ('Donations listed', stats.total_listings), ('NGOs on board', stats.ngos)] %}
+  <div class="col-6 col-md-3"><div class="card h-100"><div class="card-body">
+    <div class="stat text-success">{{ value }}</div><div class="text-muted">{{ label }}</div>
+  </div></div></div>
+  {% endfor %}
+</div>
+{% endblock %}
