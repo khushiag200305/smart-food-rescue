@@ -47,10 +47,10 @@ def create_app(test_config=None):
 
     from .storage import file_url
     from .utils import (STAGES, badge, fmt_dt, is_expired, minutes_left, pickup_day, pickup_label,
-                        pickup_time, time_left_label)
+                        pickup_time, time_fraction, time_left_label)
     app.jinja_env.globals.update(file_url=file_url, is_expired=is_expired, badge=badge,
                                  minutes_left=minutes_left, time_left_label=time_left_label,
-                                 pickup_day=pickup_day, pickup_time=pickup_time,
+                                 pickup_day=pickup_day, pickup_time=pickup_time, time_fraction=time_fraction,
                                  STAGES=STAGES)
     app.jinja_env.filters["dt"] = fmt_dt
     app.jinja_env.filters["pickup"] = pickup_label

@@ -1,35 +1,35 @@
 {% extends "base.html" %}
-{% from "_ui.html" import icon, track %}
+{% from "_ui.html" import icon, track, plate %}
 {% block title %}My requests | Smart Food Rescue{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>My requests</h1><p>Once a kitchen approves you, its contact details appear here.</p></div>
+  <div><h1>My requests</h1><p>Once a kitchen approves you, its phone number appears here.</p></div>
   <a class="btn btn-ghost" href="{{ url_for('ngo.browse') }}">See available food</a>
 </div>
 
-<div class="rows">
+<div class="stack">
 {% for r in requests %}
-  <article class="row">
-    {% if r.image_key %}<img class="row-photo" src="{{ file_url(r.image_key) }}" alt="Photo of {{ r.food_name }}" loading="lazy">{% else %}<div class="row-photo"></div>{% endif %}
-    <div class="row-main">
-      <div class="row-top">
+  <article class="order">
+    {{ plate(r, 'plate-sm') }}
+    <div class="order-main">
+      <div class="order-top">
         <h3>{{ r.food_name }}</h3>
         {% if r.status != 'approved' %}{{ badge(r.status) }}{% endif %}
       </div>
-      <div class="row-meta">
-        <span><strong>{{ r.quantity }}</strong>&nbsp;meals</span>
-        <span>{{ icon('clock') }} Pick up {{ pickup_day(r.available_until) }} by {{ pickup_time(r.available_until) }}</span>
-        <span>{{ icon('store') }} {{ r.donor_org }}</span>
-        <span>{{ icon('pin') }} {{ r.location }}</span>
-      </div>
+      <ul class="facts">
+        <li>{{ icon('bowl') }} {{ r.quantity }} meals</li>
+        <li>{{ icon('clock') }} Pick up {{ pickup_day(r.available_until) }} by {{ pickup_time(r.available_until) }}</li>
+        <li>{{ icon('store') }} {{ r.donor_org }}</li>
+        <li>{{ icon('pin') }} {{ r.location }}</li>
+      </ul>
       {% if r.status == 'approved' %}
-        <div class="track-wrap">{{ track(r.listing_status) }}</div>
-        <div class="row-meta"><span>{{ icon('phone') }} Contact the kitchen: <strong>{{ r.donor_phone or r.donor_email }}</strong></span></div>
+        {{ track(r.listing_status) }}
+        <ul class="facts"><li class="hot">{{ icon('phone') }} Call the kitchen: {{ r.donor_phone or r.donor_email }}</li></ul>
         {% if r.listing_status == 'approved' %}
         <div class="actions">
           <form method="post" action="{{ url_for('ngo.picked_up', req_id=r.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-primary btn-sm">Mark as picked up</button>
+            <button class="btn btn-sun btn-sm">Mark as picked up</button>
           </form>
         </div>
         {% endif %}
@@ -38,6 +38,7 @@
   </article>
 {% else %}
   <div class="empty">
+    <div class="plate-empty"></div>
     <h3>You haven't requested any food yet</h3>
     <p>Pick something you can collect before its pickup time.</p>
     <a class="btn btn-primary" href="{{ url_for('ngo.browse') }}">See available food</a>

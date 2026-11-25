@@ -1,17 +1,18 @@
 {% extends "base.html" %}
+{% from "_ui.html" import icon %}
 {% block title %}Create an account | Smart Food Rescue{% endblock %}
 {% block content %}
 <div class="medium">
   <div class="page-head"><div><h1>Create an account</h1><p>Kitchens post surplus food. NGOs collect it.</p></div></div>
-  <form class="panel" method="post" enctype="multipart/form-data">
+  <form class="sheet" method="post" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <fieldset style="border:0;padding:0;margin:0">
       <legend class="sr-only">Account type</legend>
       <div class="choice">
         <input type="radio" name="role" id="role-donor" value="donor" {% if form.get('role') != 'ngo' %}checked{% endif %}>
-        <label for="role-donor"><strong>I have food to give</strong><span>Mess, restaurant, hotel or cafeteria</span></label>
+        <label for="role-donor"><span class="dot">{{ icon('bowl', 22) }}</span><span><strong>I have food to give</strong><small>Mess, restaurant, hotel or cafeteria</small></span></label>
         <input type="radio" name="role" id="role-ngo" value="ngo" {% if form.get('role') == 'ngo' %}checked{% endif %}>
-        <label for="role-ngo"><strong>We collect food</strong><span>NGO or charity, verified by an admin</span></label>
+        <label for="role-ngo"><span class="dot">{{ icon('hands', 22) }}</span><span><strong>We collect food</strong><small>NGO or charity, verified by an admin</small></span></label>
       </div>
     </fieldset>
 

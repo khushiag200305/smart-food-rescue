@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_ui.html" import initial %}
 {% block title %}Admin | Smart Food Rescue{% endblock %}
 {% block content %}
 <div class="page-head">
@@ -6,8 +7,8 @@
 </div>
 
 <section class="kpis" aria-label="Platform numbers">
-  <div><strong>{{ stats.meals }}</strong><span>meals rescued</span></div>
-  <div><strong>{{ stats.completed }}</strong><span>pickups completed</span></div>
+  <div class="k-sun"><strong>{{ stats.meals }}</strong><span>meals rescued</span></div>
+  <div class="k-leaf"><strong>{{ stats.completed }}</strong><span>pickups completed</span></div>
   <div><strong>{{ stats.total_listings }}</strong><span>donations posted</span></div>
   <div><strong>{{ stats.donors }}</strong><span>donors</span></div>
   <div><strong>{{ stats.ngos }}</strong><span>NGOs</span></div>
@@ -15,9 +16,9 @@
 </section>
 
 {% if by_status %}
-<p class="muted" style="margin-top:-1rem;margin-bottom:2rem">
-  {% for s in by_status %}{{ badge(s.status) }} {{ s.n }}{% if not loop.last %}&ensp;{% endif %}{% endfor %}
-</p>
+<div class="status-mix">
+  {% for s in by_status %}<span class="pill pill-{{ s.status }}">{{ badge(s.status) | striptags }}: {{ s.n }}</span>{% endfor %}
+</div>
 {% endif %}
 
 <div class="section-head"><h2>People</h2></div>
@@ -26,7 +27,8 @@
   <tbody>
   {% for u in users %}
   <tr>
-    <td>{{ u.name }}</td><td>{{ u.organization or '—' }}</td><td>{{ u.email }}</td>
+    <td><div class="person">{{ initial(u.name) }}<span>{{ u.name }}</span></div></td>
+    <td>{{ u.organization or '—' }}</td><td>{{ u.email }}</td>
     <td>{{ {'donor': 'Donor', 'ngo': 'NGO', 'admin': 'Admin'}.get(u.role, u.role) }}</td>
     <td>
       {% if not u.active %}<span class="pill pill-off">Deactivated</span>
@@ -36,7 +38,7 @@
     <td>
       <div class="actions" style="justify-content:flex-end">
       {% if u.role == 'ngo' and u.verification_doc_key %}
-        <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="{{ file_url(u.verification_doc_key) }}">View certificate</a>
+        <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="{{ file_url(u.verification_doc_key) }}">Certificate</a>
       {% endif %}
       {% if u.role == 'ngo' and not u.is_verified %}
         <form method="post" action="{{ url_for('admin.verify', user_id=u.id) }}">
@@ -61,7 +63,7 @@
   <tbody>
   {% for l in listings %}
   <tr>
-    <td>{{ l.food_name }}</td><td>{{ l.donor_org }}</td><td class="num">{{ l.quantity }}</td>
+    <td><strong>{{ l.food_name }}</strong></td><td>{{ l.donor_org }}</td><td class="num">{{ l.quantity }}</td>
     <td>{{ l.available_until | pickup }}</td><td>{{ badge(l.status) }}</td>
     <td>
       <form method="post" action="{{ url_for('admin.remove_listing', food_id=l.id) }}" data-confirm="Remove this donation for everyone?" style="text-align:right">

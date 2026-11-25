@@ -1,17 +1,18 @@
 {% extends "base.html" %}
-{% from "_ui.html" import ticket %}
+{% from "_ui.html" import dish_card, icon %}
 {% block title %}Available food | Smart Food Rescue{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>Available food</h1><p>Soonest pickup first. Request what you can collect in time.</p></div>
+  <div><h1>Available food</h1><p>Soonest pickup first. The ring around each plate shows how much time is left.</p></div>
 </div>
 
 {% if not current_user.is_verified %}
-  <div class="notice"><strong>Your NGO is waiting for verification.</strong> You can look around now. Once an admin checks your certificate, you'll be able to request food.</div>
+  <div class="notice"><span class="dot">{{ icon('hourglass', 20) }}</span>
+    <p><strong>Your NGO is waiting for verification.</strong> You can look around now. Once an admin checks your certificate, you'll be able to request food.</p></div>
 {% endif %}
 
 <form class="filters" method="get" role="search">
-  <label class="grow"><span class="sr-only">Location</span>
+  <label class="grow"><span class="sr-only">Area</span>
     <input name="location" placeholder="Search by area, e.g. Leela Bhawan" value="{{ filters.get('location', '') }}"></label>
   <label><span class="sr-only">Food type</span>
     <select name="food_type">
@@ -26,12 +27,12 @@
 </form>
 
 {% if listings %}
-<div class="rail">
+<div class="menu">
   {% for l in listings %}
-    {% call ticket(l) %}
+    {% call dish_card(l) %}
       {% if l.description %}<p class="note">{{ l.description }}</p>{% endif %}
       {% if l.my_request %}
-        <p style="margin:.25rem 0 0">Your request: {{ badge(l.my_request) }}</p>
+        <p class="status-line">Your request: {{ badge(l.my_request) }}</p>
       {% else %}
         <form method="post" action="{{ url_for('ngo.make_request', food_id=l.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -45,6 +46,7 @@
 </div>
 {% else %}
 <div class="empty">
+  <div class="plate-empty"></div>
   <h3>No food matches right now</h3>
   <p>{% if filters.get('location') or filters.get('food_type') or filters.get('min_qty') %}Try clearing a filter, or check back later.{% else %}New donations appear here as soon as kitchens post them.{% endif %}</p>
   {% if filters.get('location') or filters.get('food_type') or filters.get('min_qty') %}<a class="btn btn-ghost" href="{{ url_for('ngo.browse') }}">Clear filters</a>{% endif %}

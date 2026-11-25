@@ -85,6 +85,17 @@ def minutes_left(value):
     return int((dt - now_local()).total_seconds() // 60) if dt else 0
 
 
+def time_fraction(listing):
+    """Share of the pickup window still left (1.0 = just posted, 0 = deadline reached)."""
+    end, start = to_dt(listing.get("available_until")), to_dt(listing.get("created_at"))
+    if not end:
+        return 0
+    if not start or end <= start:
+        return 1 if end > now_local() else 0
+    left = (end - now_local()).total_seconds() / (end - start).total_seconds()
+    return max(0.0, min(1.0, left))
+
+
 def time_left_label(minutes):
     if minutes <= 0:
         return "Pickup time has passed"

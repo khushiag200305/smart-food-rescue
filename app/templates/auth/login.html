@@ -3,7 +3,7 @@
 {% block content %}
 <div class="narrow">
   <div class="page-head"><div><h1>Log in</h1><p>Donors, NGOs and admins all log in here.</p></div></div>
-  <form class="panel" method="post">
+  <form class="sheet" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="field"><label for="email">Email</label>
       <input id="email" type="email" name="email" autocomplete="email" required autofocus></div>

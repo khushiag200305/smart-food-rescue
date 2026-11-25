@@ -23,10 +23,10 @@ def platform_stats():
 def index():
     from .utils import now_str
     upcoming = query(
-        "SELECT f.food_name, f.quantity, f.food_type, f.location, f.available_until, "
+        "SELECT f.food_name, f.quantity, f.food_type, f.location, f.available_until, f.created_at, f.image_key, "
         "u.organization AS donor_org FROM food_listings f JOIN users u ON u.id = f.donor_id "
         "WHERE f.status IN ('available', 'requested') AND f.available_until > ? "
-        "ORDER BY f.available_until ASC LIMIT 3",
+        "ORDER BY f.available_until ASC LIMIT 4",
         (now_str(),),
     )
     return render_template("index.html", stats=platform_stats(), upcoming=upcoming)
@@ -40,9 +40,11 @@ def dashboard():
 
 
 @bp.route("/uploads/<path:key>")
-@login_required()
 def uploaded_file(key):
-    """Serves local uploads during development only (S3 is used in the cloud)."""
+    """Serves local uploads during development only (S3 is used in the cloud).
+    Food photos are public (landing page); NGO certificates need a login."""
     if current_app.config.get("S3_BUCKET"):
         abort(404)
+    if not key.startswith("food/") and g.user is None:
+        abort(403)
     return send_from_directory(current_app.config["LOCAL_UPLOAD_DIR"], key)

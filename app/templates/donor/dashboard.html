@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_ui.html" import icon, food_tag, track %}
+{% from "_ui.html" import icon, food_tag, track, plate, initial %}
 {% block title %}My donations | Smart Food Rescue{% endblock %}
 {% block content %}
 <div class="page-head">
@@ -9,38 +9,43 @@
 
 {% if not listings %}
   <div class="empty">
-    <h3>You haven't posted any food yet</h3>
+    <div class="plate-empty"></div>
+    <h3>Your plate is empty</h3>
     <p>Post your first donation and verified NGOs will see it straight away.</p>
     <a class="btn btn-primary" href="{{ url_for('donor.new_listing') }}">Donate food</a>
   </div>
 {% endif %}
 
-<div class="rows">
+<div class="stack">
 {% for l in listings %}
   {% set reqs = requests.get(l.id, []) %}
   {% set pending = reqs | selectattr('status', 'equalto', 'pending') | list %}
-  <article class="row">
-    {% if l.image_key %}<img class="row-photo" src="{{ file_url(l.image_key) }}" alt="Photo of {{ l.food_name }}" loading="lazy">{% else %}<div class="row-photo"></div>{% endif %}
-    <div class="row-main">
-      <div class="row-top">
+  {% set live = l.status in ('available', 'requested') %}
+  <article class="order">
+    {{ plate(l, 'plate-sm') }}
+    <div class="order-main">
+      <div class="order-top">
         <h3>{{ l.food_name }} {{ food_tag(l.food_type) }}</h3>
         {% if is_expired(l) %}{{ badge('expired') }}{% elif pending %}<span class="pill pill-pending">{{ pending | length }} waiting for you</span>{% endif %}
       </div>
-      <div class="row-meta">
-        <span><strong>{{ l.quantity }}</strong>&nbsp;meals</span>
-        <span>{{ icon('clock') }} Pick up {{ pickup_day(l.available_until) }} by {{ pickup_time(l.available_until) }}</span>
-        <span>{{ icon('pin') }} {{ l.location }}</span>
-      </div>
-      <div class="track-wrap">{{ track(l.status) }}</div>
+      <ul class="facts">
+        <li>{{ icon('bowl') }} {{ l.quantity }} meals</li>
+        <li{% if live and not is_expired(l) %} class="hot"{% endif %}>{{ icon('clock') }} Pick up {{ pickup_day(l.available_until) }} by {{ pickup_time(l.available_until) }}</li>
+        <li>{{ icon('pin') }} {{ l.location }}</li>
+      </ul>
+      {{ track(l.status) }}
 
       {% if reqs %}
       <div class="requests">
         <h4>Requests from NGOs</h4>
         {% for r in reqs %}
         <div class="request">
-          <div>
-            <div class="who-line"><strong>{{ r.ngo_org }}</strong> <span class="muted">{{ r.ngo_name }}, {{ r.ngo_phone or r.ngo_email }}</span></div>
-            {% if r.message %}<p class="msg">“{{ r.message }}”</p>{% endif %}
+          <div class="person">
+            {{ initial(r.ngo_org) }}
+            <div>
+              <strong>{{ r.ngo_org }}</strong> <span class="muted">{{ r.ngo_name }}, {{ r.ngo_phone or r.ngo_email }}</span>
+              {% if r.message %}<p class="msg">“{{ r.message }}”</p>{% endif %}
+            </div>
           </div>
           {% if r.status == 'pending' %}
           <div class="actions">
@@ -62,7 +67,7 @@
         {% if l.status == 'picked_up' %}
         <form method="post" action="{{ url_for('donor.complete', food_id=l.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-primary btn-sm">Confirm it was collected</button></form>
+          <button class="btn btn-sun btn-sm">Confirm it was collected</button></form>
         {% endif %}
         {% if l.status in ('available', 'requested', 'expired') %}
         <form method="post" action="{{ url_for('donor.delete', food_id=l.id) }}" data-confirm="Delete this donation? NGOs will no longer see it.">

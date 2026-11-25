@@ -1,46 +1,49 @@
 {% extends "base.html" %}
-{% from "_ui.html" import ticket %}
+{% from "_ui.html" import plate, countdown %}
 {% block content %}
 <section class="hero">
   <div>
-    <h1>Extra food from tonight's kitchens, collected before it spoils.</h1>
-    <p class="lead">College messes, restaurants and hotels post what's left over. Verified NGOs see it straight away, request it, and pick it up while it's still good to eat.</p>
+    <h1>Good food shouldn't end up in the bin.</h1>
+    <p class="lead">Messes, restaurants and hotels post what's left after service. Verified NGOs see it straight away and collect it while it's still fresh.</p>
     <div class="actions">
       {% if current_user %}
-        <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Open my dashboard</a>
+        <a class="btn btn-sun" href="{{ url_for('main.dashboard') }}">Open my dashboard</a>
       {% else %}
-        <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Create an account</a>
-        <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">Log in</a>
+        <a class="btn btn-sun" href="{{ url_for('auth.register') }}">Join as a kitchen or NGO</a>
+        <a class="btn btn-onleaf" href="{{ url_for('auth.login') }}">Log in</a>
       {% endif %}
     </div>
   </div>
 
-  <div class="hero-board">
+  <div class="thali" aria-label="Food waiting to be picked up">
+    <div class="table"></div>
+    {% for l in upcoming %}{{ plate(l, 'p' ~ loop.index0) }}{% endfor %}
     {% if upcoming %}
-      <p class="board-title">Waiting to be picked up now</p>
-      {% for l in upcoming[:2] %}{{ ticket(l, photo=false) }}{% endfor %}
-    {% else %}
-      <div class="empty">
-        <h3>Nothing is waiting right now</h3>
-        <p>When a kitchen posts surplus food, it appears here with its pickup time.</p>
+      {% set first = upcoming[0] %}
+      <div class="chip">
+        <strong>{{ first.food_name }}</strong>
+        <span>{{ first.quantity }} meals at {{ first.donor_org }}</span><br>
+        {{ countdown(first) }}
       </div>
+    {% else %}
+      <div class="chip"><strong>All caught up</strong><span>No food is waiting for pickup right now.</span></div>
     {% endif %}
   </div>
 </section>
 
-<section class="figures" aria-label="Platform numbers">
-  <div><strong>{{ stats.meals }}</strong><span>meals rescued</span></div>
+<section class="numbers" aria-label="Platform numbers">
+  <div><strong>{{ stats.meals }}</strong><span>meals rescued so far</span></div>
   <div><strong>{{ stats.completed }}</strong><span>pickups completed</span></div>
   <div><strong>{{ stats.donors }}</strong><span>kitchens donating</span></div>
   <div><strong>{{ stats.ngos }}</strong><span>NGOs collecting</span></div>
 </section>
 
-<section>
-  <h2>How a donation moves</h2>
+<section class="journey">
+  <h2>From kitchen to community in three steps</h2>
   <ol class="steps">
     <li><h3>A kitchen posts it</h3><p>What's left, how many meals, where to collect it and the latest pickup time, with a photo.</p></li>
-    <li><h3>An NGO requests it</h3><p>Verified NGOs see new food first and send a request with their pickup time.</p></li>
-    <li><h3>It gets picked up</h3><p>The kitchen approves one NGO, which collects the food, and both confirm the handover.</p></li>
+    <li><h3>An NGO claims it</h3><p>Verified NGOs see new food first and send a request saying when they'll arrive.</p></li>
+    <li><h3>It reaches people</h3><p>The kitchen approves one NGO, which collects the food, and both confirm the handover.</p></li>
   </ol>
 </section>
 {% endblock %}
