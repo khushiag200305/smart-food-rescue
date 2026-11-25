@@ -29,6 +29,15 @@ Donation lifecycle: **Available → Requested → Approved → Picked up → Com
 Listings still available or requested after their pickup time become **Expired** (set by the Lambda job).
 Approving one NGO's request automatically declines the others for that listing.
 
+## Design
+
+Every dish is shown on a **round plate**, and a ring around the plate shrinks as its pickup time gets
+closer (it turns red in the last hour), so NGOs can see at a glance what to collect first. The landing
+page arranges the food currently waiting like a thali. Donors and NGOs follow each donation on a
+five-step track (Listed, Requested, Approved, Picked up, Done). The stylesheet and script are plain CSS
+and JavaScript in `app/static/`; only the Baloo 2 and Figtree fonts come from Google Fonts, with
+system-font fallbacks.
+
 ## Project structure
 
 ```
@@ -53,7 +62,8 @@ smart-food-rescue/
 │   ├── ngo.py              # browse + filters, request, my requests, picked up
 │   ├── admin.py            # verify NGOs, manage users, remove listings, stats
 │   ├── demo.py             # seed-demo command for presentation data
-│   └── templates/          # Bootstrap 5 pages
+│   ├── templates/          # Jinja HTML pages (_ui.html holds the shared plate, food card, track and icons)
+│   └── static/             # css/style.css and js/app.js: the site's own design, no CSS framework
 ├── lambda/
 │   ├── expire_listings/lambda_function.py   # AWS Lambda handler
 │   └── build.py            # builds lambda/expire_listings.zip for upload

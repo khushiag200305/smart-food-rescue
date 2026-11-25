@@ -1,49 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Admin · Smart Food Rescue{% endblock %}
+{% from "_ui.html" import initial %}
+{% block title %}Admin | Smart Food Rescue{% endblock %}
 {% block content %}
-<h2 class="h4 mb-3">Admin dashboard</h2>
-
-<div class="row g-3 text-center mb-4">
-  {% for label, value in [('Meals donated', stats.meals), ('Completed pickups', stats.completed),
-                          ('Total listings', stats.total_listings), ('Donors', stats.donors),
-                          ('NGOs', stats.ngos), ('NGOs awaiting verification', stats.pending_ngos)] %}
-  <div class="col-6 col-md-2"><div class="card h-100"><div class="card-body p-2">
-    <div class="stat text-success">{{ value }}</div><div class="small text-muted">{{ label }}</div>
-  </div></div></div>
-  {% endfor %}
+<div class="page-head">
+  <div><h1>Admin</h1><p>Verify NGOs, manage accounts and keep an eye on donations.</p></div>
 </div>
 
+<section class="kpis" aria-label="Platform numbers">
+  <div class="k-sun"><strong>{{ stats.meals }}</strong><span>meals rescued</span></div>
+  <div class="k-leaf"><strong>{{ stats.completed }}</strong><span>pickups completed</span></div>
+  <div><strong>{{ stats.total_listings }}</strong><span>donations posted</span></div>
+  <div><strong>{{ stats.donors }}</strong><span>donors</span></div>
+  <div><strong>{{ stats.ngos }}</strong><span>NGOs</span></div>
+  <div{% if stats.pending_ngos %} class="attention"{% endif %}><strong>{{ stats.pending_ngos }}</strong><span>NGOs to verify</span></div>
+</section>
+
 {% if by_status %}
-<p class="mb-4">Listings by status:
-  {% for s in by_status %}{{ badge(s.status) }} {{ s.n }}&nbsp;&nbsp;{% endfor %}
-</p>
+<div class="status-mix">
+  {% for s in by_status %}<span class="pill pill-{{ s.status }}">{{ badge(s.status) | striptags }}: {{ s.n }}</span>{% endfor %}
+</div>
 {% endif %}
 
-<h3 class="h5">Users</h3>
-<div class="table-responsive mb-4"><table class="table table-sm align-middle bg-white border">
-  <thead><tr><th>Name</th><th>Organisation</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+<div class="section-head"><h2>People</h2></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Name</th><th>Organisation</th><th>Email</th><th>Role</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
   <tbody>
   {% for u in users %}
   <tr>
-    <td>{{ u.name }}</td><td>{{ u.organization or '—' }}</td><td>{{ u.email }}</td><td>{{ u.role }}</td>
+    <td><div class="person">{{ initial(u.name) }}<span>{{ u.name }}</span></div></td>
+    <td>{{ u.organization or '—' }}</td><td>{{ u.email }}</td>
+    <td>{{ {'donor': 'Donor', 'ngo': 'NGO', 'admin': 'Admin'}.get(u.role, u.role) }}</td>
     <td>
-      {% if u.role == 'ngo' %}{% if u.is_verified %}<span class="badge text-bg-success">Verified</span>{% else %}<span class="badge text-bg-warning">Unverified</span>{% endif %}{% endif %}
-      {% if not u.active %}<span class="badge text-bg-dark">Deactivated</span>{% endif %}
+      {% if not u.active %}<span class="pill pill-off">Deactivated</span>
+      {% elif u.role == 'ngo' %}{% if u.is_verified %}<span class="pill pill-verified">Verified</span>{% else %}<span class="pill pill-unverified">Not verified</span>{% endif %}
+      {% else %}<span class="pill pill-verified">Active</span>{% endif %}
     </td>
-    <td class="text-end">
-      <div class="d-flex gap-1 justify-content-end">
+    <td>
+      <div class="actions" style="justify-content:flex-end">
       {% if u.role == 'ngo' and u.verification_doc_key %}
-        <a class="btn btn-sm btn-outline-secondary" target="_blank" href="{{ file_url(u.verification_doc_key) }}">Certificate</a>
+        <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="{{ file_url(u.verification_doc_key) }}">Certificate</a>
       {% endif %}
       {% if u.role == 'ngo' and not u.is_verified %}
         <form method="post" action="{{ url_for('admin.verify', user_id=u.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-sm btn-success">Verify</button></form>
+          <button class="btn btn-primary btn-sm">Verify</button></form>
       {% endif %}
       {% if u.id != current_user.id %}
         <form method="post" action="{{ url_for('admin.toggle_active', user_id=u.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-sm btn-outline-{{ 'danger' if u.active else 'success' }}">{{ 'Deactivate' if u.active else 'Reactivate' }}</button></form>
+          <button class="btn btn-sm {{ 'btn-danger' if u.active else 'btn-ghost' }}">{{ 'Deactivate' if u.active else 'Reactivate' }}</button></form>
       {% endif %}
       </div>
     </td>
@@ -52,22 +57,22 @@
   </tbody>
 </table></div>
 
-<h3 class="h5">All listings</h3>
-<div class="table-responsive"><table class="table table-sm align-middle bg-white border">
-  <thead><tr><th>Food</th><th>Donor</th><th>Meals</th><th>Location</th><th>Until</th><th>Status</th><th></th></tr></thead>
+<div class="section-head"><h2>Donations</h2></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Food</th><th>Kitchen</th><th class="num">Meals</th><th>Pick up by</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
   <tbody>
   {% for l in listings %}
   <tr>
-    <td>{{ l.food_name }}</td><td>{{ l.donor_org }}</td><td>{{ l.quantity }}</td><td>{{ l.location }}</td>
-    <td class="small">{{ l.available_until|dt }}</td><td>{{ badge(l.status) }}</td>
-    <td class="text-end">
-      <form method="post" action="{{ url_for('admin.remove_listing', food_id=l.id) }}" onsubmit="return confirm('Remove this listing?')">
+    <td><strong>{{ l.food_name }}</strong></td><td>{{ l.donor_org }}</td><td class="num">{{ l.quantity }}</td>
+    <td>{{ l.available_until | pickup }}</td><td>{{ badge(l.status) }}</td>
+    <td>
+      <form method="post" action="{{ url_for('admin.remove_listing', food_id=l.id) }}" data-confirm="Remove this donation for everyone?" style="text-align:right">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="btn btn-sm btn-outline-danger">Remove</button></form>
+        <button class="btn btn-danger btn-sm">Remove</button></form>
     </td>
   </tr>
   {% else %}
-  <tr><td colspan="7" class="text-muted">No listings yet.</td></tr>
+  <tr><td colspan="6" class="muted">No donations yet.</td></tr>
   {% endfor %}
   </tbody>
 </table></div>

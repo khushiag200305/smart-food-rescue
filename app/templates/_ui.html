@@ -1,0 +1,76 @@
+{# Shared pieces: icons, the plate with its countdown ring, the food card, the lifecycle track. #}
+
+{% macro icon(name, size=16) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+{%- if name == 'clock' -%}<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+{%- elif name == 'pin' -%}<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>
+{%- elif name == 'store' -%}<path d="M4 10h16v10H4zM3 10l2-6h14l2 6M9 20v-5h6v5"/>
+{%- elif name == 'phone' -%}<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>
+{%- elif name == 'plus' -%}<path d="M12 5v14M5 12h14"/>
+{%- elif name == 'menu' -%}<path d="M4 7h16M4 12h16M4 17h16"/>
+{%- elif name == 'bowl' -%}<path d="M3 11h18a9 9 0 0 1-18 0zM8 7c0-1 1-1.5 1-2.5M12 7c0-1 1-1.5 1-2.5M16 7c0-1 1-1.5 1-2.5"/>
+{%- elif name == 'hands' -%}<path d="M7 11V6a2 2 0 0 1 4 0v5M11 9a2 2 0 0 1 4 0v2M15 10a2 2 0 0 1 4 0v3a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-2-3a2 2 0 0 1 3-2l2 2"/>
+{%- elif name == 'hourglass' -%}<path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9s10 4 10 9"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
+
+{% macro food_tag(kind) -%}
+<span class="tag tag-{{ kind }}">{{ {'veg': 'Veg', 'non-veg': 'Non-veg', 'mixed': 'Mixed'}.get(kind, kind) }}</span>
+{%- endmacro %}
+
+{# A round photo on a plate. The ring around it is the share of pickup time still left. #}
+{% macro plate(l, cls='') -%}
+{%- set frac = time_fraction(l) -%}
+{%- set mins = minutes_left(l.available_until) -%}
+{%- set c = 289.03 -%}
+<div class="plate {{ cls }}{% if 0 < mins <= 60 %} soon{% endif %}">
+  <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+    <circle class="track" cx="50" cy="50" r="46"/>
+    {% if frac > 0 %}<circle class="left" cx="50" cy="50" r="46" stroke-dasharray="{{ c }}" stroke-dashoffset="{{ '%.1f' % (c * (1 - frac)) }}"/>{% endif %}
+  </svg>
+  <div class="dish">{% if l.image_key %}<img src="{{ file_url(l.image_key) }}" alt="Photo of {{ l.food_name }}" loading="lazy">{% endif %}</div>
+</div>
+{%- endmacro %}
+
+{% macro countdown(l) -%}
+{%- set mins = minutes_left(l.available_until) -%}
+<span class="countdown{% if mins <= 0 %} gone{% elif mins <= 60 %} soon{% endif %}" data-minutes-left="{{ mins }}">{{ time_left_label(mins) }}</span>
+{%- endmacro %}
+
+{# Food card on the NGO "Available food" page: the plate breaks out of the top of the card. #}
+{% macro dish_card(l) -%}
+<article class="dish-card">
+  {{ plate(l) }}
+  <div class="when">
+    <span class="by">Pick up {{ pickup_day(l.available_until) }} by <strong>{{ pickup_time(l.available_until) }}</strong></span>
+    {{ countdown(l) }}
+  </div>
+  <h3>{{ l.food_name }} {{ food_tag(l.food_type) }}</h3>
+  <p class="meals"><strong>{{ l.quantity }}</strong> meals</p>
+  <ul class="where">
+    <li>{{ icon('store') }}<span>{{ l.donor_org }}</span></li>
+    <li>{{ icon('pin') }}<span>{{ l.location }}</span></li>
+  </ul>
+  {% if caller is defined %}{{ caller() }}{% endif %}
+</article>
+{%- endmacro %}
+
+{# Listed -> Requested -> Approved -> Picked up -> Done #}
+{% macro track(status) -%}
+{%- set order = STAGES | map(attribute=0) | list -%}
+{%- if status in order -%}
+{%- set current = order.index(status) -%}
+<ol class="track" aria-label="Progress">
+  {% for key, label in STAGES %}
+  <li class="{% if loop.index0 < current or status == 'completed' %}done{% elif loop.index0 == current %}now{% endif %}"
+      {% if loop.index0 == current %}aria-current="step"{% endif %}>{{ label }}</li>
+  {% endfor %}
+</ol>
+{%- else -%}
+{{ badge(status) }}
+{%- endif -%}
+{%- endmacro %}
+
+{% macro initial(text) -%}<span class="avatar" aria-hidden="true">{{ (text or '?')[0] | upper }}</span>{%- endmacro %}

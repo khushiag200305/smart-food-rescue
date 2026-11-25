@@ -40,11 +40,71 @@ def is_expired(listing):
     return listing["status"] in ("available", "requested") and to_dt(listing["available_until"]) < now_local()
 
 
-BADGE_COLORS = {"available": "success", "requested": "warning", "approved": "primary", "picked_up": "info",
-                "completed": "secondary", "expired": "dark", "pending": "warning", "rejected": "danger"}
+STATUS_LABELS = {"available": "Available", "requested": "Requested", "approved": "Approved",
+                 "picked_up": "Picked up", "completed": "Completed", "expired": "Expired",
+                 "pending": "Waiting for donor", "rejected": "Not approved"}
 
 
 def badge(status):
-    """Bootstrap badge for a listing or request status."""
-    label = escape(str(status).replace("_", " ").capitalize())
-    return Markup(f'<span class="badge text-bg-{BADGE_COLORS.get(status, "light")}">{label}</span>')
+    """Small status label, styled by .pill-<status> in static/css/style.css."""
+    label = escape(STATUS_LABELS.get(status, str(status).replace("_", " ").capitalize()))
+    return Markup(f'<span class="pill pill-{escape(status)}">{label}</span>')
+
+
+def short_time(dt):
+    return dt.strftime("%I:%M %p").lstrip("0")
+
+
+def pickup_label(value):
+    """'Today, 9:00 PM' / 'Tomorrow, 8:30 AM' / '28 Nov, 9:00 PM'."""
+    dt = to_dt(value)
+    if not dt:
+        return ""
+    days = (dt.date() - now_local().date()).days
+    day = {0: "Today", 1: "Tomorrow", -1: "Yesterday"}.get(days, dt.strftime("%d %b").lstrip("0"))
+    return f"{day}, {short_time(dt)}"
+
+
+def pickup_day(value):
+    """'today' / 'tomorrow' / 'yesterday' / '28 Nov' (used in 'Pick up today by')."""
+    dt = to_dt(value)
+    if not dt:
+        return ""
+    days = (dt.date() - now_local().date()).days
+    return {0: "today", 1: "tomorrow", -1: "yesterday"}.get(days, "on " + dt.strftime("%d %b").lstrip("0"))
+
+
+def pickup_time(value):
+    dt = to_dt(value)
+    return short_time(dt) if dt else ""
+
+
+def minutes_left(value):
+    """Whole minutes until a pickup deadline (negative once it has passed)."""
+    dt = to_dt(value)
+    return int((dt - now_local()).total_seconds() // 60) if dt else 0
+
+
+def time_fraction(listing):
+    """Share of the pickup window still left (1.0 = just posted, 0 = deadline reached)."""
+    end, start = to_dt(listing.get("available_until")), to_dt(listing.get("created_at"))
+    if not end:
+        return 0
+    if not start or end <= start:
+        return 1 if end > now_local() else 0
+    left = (end - now_local()).total_seconds() / (end - start).total_seconds()
+    return max(0.0, min(1.0, left))
+
+
+def time_left_label(minutes):
+    if minutes <= 0:
+        return "Pickup time has passed"
+    hours, mins = divmod(minutes, 60)
+    if hours >= 24:
+        return f"{hours // 24} d {hours % 24} h left"
+    return f"{hours} h {mins} min left" if hours else f"{mins} min left"
+
+
+# Lifecycle shown as a step track on dashboards.
+STAGES = [("available", "Listed"), ("requested", "Requested"), ("approved", "Approved"),
+          ("picked_up", "Picked up"), ("completed", "Done")]
