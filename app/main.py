@@ -21,7 +21,15 @@ def platform_stats():
 
 @bp.route("/")
 def index():
-    return render_template("index.html", stats=platform_stats())
+    from .utils import now_str
+    upcoming = query(
+        "SELECT f.food_name, f.quantity, f.food_type, f.location, f.available_until, "
+        "u.organization AS donor_org FROM food_listings f JOIN users u ON u.id = f.donor_id "
+        "WHERE f.status IN ('available', 'requested') AND f.available_until > ? "
+        "ORDER BY f.available_until ASC LIMIT 3",
+        (now_str(),),
+    )
+    return render_template("index.html", stats=platform_stats(), upcoming=upcoming)
 
 
 @bp.route("/dashboard")

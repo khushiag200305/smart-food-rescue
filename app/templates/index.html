@@ -1,22 +1,46 @@
 {% extends "base.html" %}
+{% from "_ui.html" import ticket %}
 {% block content %}
-<div class="p-5 mb-4 bg-white rounded-3 border">
-  <h1 class="display-6">Surplus food shouldn't go to waste.</h1>
-  <p class="lead">College messes, restaurants and hotels list leftover food. Verified NGOs request it and pick it up, all through one cloud-hosted platform.</p>
-  {% if current_user %}
-    <a class="btn btn-success btn-lg" href="{{ url_for('main.dashboard') }}">Go to my dashboard</a>
-  {% else %}
-    <a class="btn btn-success btn-lg" href="{{ url_for('auth.register') }}">Get started</a>
-    <a class="btn btn-outline-success btn-lg" href="{{ url_for('auth.login') }}">Log in</a>
-  {% endif %}
-</div>
+<section class="hero">
+  <div>
+    <h1>Extra food from tonight's kitchens, collected before it spoils.</h1>
+    <p class="lead">College messes, restaurants and hotels post what's left over. Verified NGOs see it straight away, request it, and pick it up while it's still good to eat.</p>
+    <div class="actions">
+      {% if current_user %}
+        <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Open my dashboard</a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Create an account</a>
+        <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">Log in</a>
+      {% endif %}
+    </div>
+  </div>
 
-<div class="row g-3 text-center">
-  {% for label, value in [('Meals donated', stats.meals), ('Completed pickups', stats.completed),
-                          ('Donations listed', stats.total_listings), ('NGOs on board', stats.ngos)] %}
-  <div class="col-6 col-md-3"><div class="card h-100"><div class="card-body">
-    <div class="stat text-success">{{ value }}</div><div class="text-muted">{{ label }}</div>
-  </div></div></div>
-  {% endfor %}
-</div>
+  <div class="hero-board">
+    {% if upcoming %}
+      <p class="board-title">Waiting to be picked up now</p>
+      {% for l in upcoming[:2] %}{{ ticket(l, photo=false) }}{% endfor %}
+    {% else %}
+      <div class="empty">
+        <h3>Nothing is waiting right now</h3>
+        <p>When a kitchen posts surplus food, it appears here with its pickup time.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="figures" aria-label="Platform numbers">
+  <div><strong>{{ stats.meals }}</strong><span>meals rescued</span></div>
+  <div><strong>{{ stats.completed }}</strong><span>pickups completed</span></div>
+  <div><strong>{{ stats.donors }}</strong><span>kitchens donating</span></div>
+  <div><strong>{{ stats.ngos }}</strong><span>NGOs collecting</span></div>
+</section>
+
+<section>
+  <h2>How a donation moves</h2>
+  <ol class="steps">
+    <li><h3>A kitchen posts it</h3><p>What's left, how many meals, where to collect it and the latest pickup time, with a photo.</p></li>
+    <li><h3>An NGO requests it</h3><p>Verified NGOs see new food first and send a request with their pickup time.</p></li>
+    <li><h3>It gets picked up</h3><p>The kitchen approves one NGO, which collects the food, and both confirm the handover.</p></li>
+  </ol>
+</section>
 {% endblock %}

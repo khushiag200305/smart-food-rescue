@@ -1,33 +1,33 @@
 {% extends "base.html" %}
-{% block title %}Donate food · Smart Food Rescue{% endblock %}
+{% block title %}Donate food | Smart Food Rescue{% endblock %}
 {% block content %}
-<div class="row justify-content-center"><div class="col-md-8">
-  <div class="card"><div class="card-body p-4">
-    <h2 class="h4 mb-3">List surplus food</h2>
-    <form method="post" enctype="multipart/form-data">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="row">
-        <div class="col-md-8 mb-3"><label class="form-label">Food name</label>
-          <input class="form-control" name="food_name" value="{{ form.get('food_name', '') }}" placeholder="Rice, dal and mixed veg" required></div>
-        <div class="col-md-4 mb-3"><label class="form-label">Type</label>
-          <select class="form-select" name="food_type">
-            {% for v, label in [('veg','Veg'), ('non-veg','Non-veg'), ('mixed','Mixed')] %}
-              <option value="{{ v }}" {% if form.get('food_type') == v %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select></div>
-        <div class="col-md-4 mb-3"><label class="form-label">Quantity (meals)</label>
-          <input class="form-control" type="number" min="1" name="quantity" value="{{ form.get('quantity', '') }}" required></div>
-        <div class="col-md-8 mb-3"><label class="form-label">Available until</label>
-          <input class="form-control" type="datetime-local" name="available_until" value="{{ form.get('available_until', '') }}" required></div>
-      </div>
-      <div class="mb-3"><label class="form-label">Pickup location</label>
-        <input class="form-control" name="location" value="{{ form.get('location', '') }}" placeholder="Hostel J Mess, Patiala" required></div>
-      <div class="mb-3"><label class="form-label">Description <small class="text-muted">(optional)</small></label>
-        <textarea class="form-control" name="description" rows="3" placeholder="Cooked at 7 PM, packed in steel containers…">{{ form.get('description', '') }}</textarea></div>
-      <div class="mb-3"><label class="form-label">Photo <small class="text-muted">(PNG/JPG/WEBP, max 5 MB · stored in AWS S3)</small></label>
-        <input class="form-control" type="file" name="image" accept="image/*" required></div>
-      <button class="btn btn-success w-100"><i class="bi bi-upload"></i> Publish donation</button>
-    </form>
-  </div></div>
-</div></div>
+<div class="medium">
+  <div class="page-head"><div><h1>Donate food</h1><p>Verified NGOs see it as soon as you publish.</p></div></div>
+  <form class="panel" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="grid-3">
+      <div class="field"><label for="food_name">What food is it?</label>
+        <input id="food_name" name="food_name" value="{{ form.get('food_name', '') }}" placeholder="Rice, dal and mixed veg" required></div>
+      <div class="field"><label for="quantity">Meals</label>
+        <input id="quantity" type="number" min="1" name="quantity" value="{{ form.get('quantity', '') }}" placeholder="40" required></div>
+      <div class="field"><label for="food_type">Type</label>
+        <select id="food_type" name="food_type">
+          {% for v, label in [('veg','Veg'), ('non-veg','Non-veg'), ('mixed','Mixed')] %}
+            <option value="{{ v }}" {% if form.get('food_type') == v %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label for="available_until">Latest pickup time</label>
+        <input id="available_until" type="datetime-local" name="available_until" value="{{ form.get('available_until', '') }}" required></div>
+      <div class="field"><label for="location">Pickup address</label>
+        <input id="location" name="location" value="{{ form.get('location', '') }}" placeholder="Hostel J Mess, Patiala" required></div>
+    </div>
+    <div class="field"><label for="description">Notes for the NGO <span class="hint">(optional)</span></label>
+      <textarea id="description" name="description" rows="3" placeholder="Cooked at 7 PM, packed in steel containers. Ask at the back gate.">{{ form.get('description', '') }}</textarea></div>
+    <div class="field"><label for="image">Photo <span class="hint">(PNG, JPG or WEBP, up to 5 MB)</span></label>
+      <input id="image" type="file" name="image" accept="image/*" required></div>
+    <button class="btn btn-primary btn-block">Publish donation</button>
+  </form>
+</div>
 {% endblock %}

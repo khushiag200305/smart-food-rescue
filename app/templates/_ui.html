@@ -1,0 +1,57 @@
+{# Shared pieces: icons, the pickup ticket, the lifecycle track. #}
+
+{% macro icon(name, size=16) -%}
+<svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+{%- if name == 'clock' -%}<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+{%- elif name == 'pin' -%}<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>
+{%- elif name == 'store' -%}<path d="M4 10h16v10H4zM3 10l2-6h14l2 6M9 20v-5h6v5"/>
+{%- elif name == 'phone' -%}<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>
+{%- elif name == 'plus' -%}<path d="M12 5v14M5 12h14"/>
+{%- elif name == 'menu' -%}<path d="M4 7h16M4 12h16M4 17h16"/>
+{%- elif name == 'plate' -%}<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
+
+{% macro food_tag(kind) -%}
+<span class="tag-{{ kind }}">{{ {'veg': 'Veg', 'non-veg': 'Non-veg', 'mixed': 'Mixed'}.get(kind, kind) }}</span>
+{%- endmacro %}
+
+{# The pickup ticket. The deadline is the most important fact, so it leads. #}
+{% macro ticket(l, photo=true) -%}
+{%- set mins = minutes_left(l.available_until) -%}
+<article class="ticket">
+  <header class="ticket-head">
+    <p class="by">Pick up {{ pickup_day(l.available_until) }} by</p>
+    <p class="time">{{ pickup_time(l.available_until) }}</p>
+    <span class="left{% if mins <= 0 %} gone{% elif mins <= 60 %} soon{% endif %}" data-minutes-left="{{ mins }}">{{ time_left_label(mins) }}</span>
+  </header>
+  {% if photo and l.image_key %}<img class="ticket-photo" src="{{ file_url(l.image_key) }}" alt="Photo of {{ l.food_name }}" loading="lazy">{% endif %}
+  <div class="ticket-body">
+    <h3>{{ l.food_name }} {{ food_tag(l.food_type) }}</h3>
+    <p class="meals" style="margin:0"><strong>{{ l.quantity }}</strong> meals</p>
+    <ul class="facts">
+      <li>{{ icon('store') }}<span>{{ l.donor_org }}</span></li>
+      <li>{{ icon('pin') }}<span>{{ l.location }}</span></li>
+    </ul>
+    {% if caller is defined %}{{ caller() }}{% endif %}
+  </div>
+</article>
+{%- endmacro %}
+
+{# Listed -> Requested -> Approved -> Picked up -> Done #}
+{% macro track(status) -%}
+{%- set order = STAGES | map(attribute=0) | list -%}
+{%- if status in order -%}
+{%- set current = order.index(status) -%}
+<ol class="track" aria-label="Progress">
+  {% for key, label in STAGES %}
+  <li class="{% if loop.index0 < current or status == 'completed' %}done{% elif loop.index0 == current %}now{% endif %}"
+      {% if loop.index0 == current %}aria-current="step"{% endif %}>{{ label }}</li>
+  {% endfor %}
+</ol>
+{%- else -%}
+{{ badge(status) }}
+{%- endif -%}
+{%- endmacro %}
