@@ -26,7 +26,7 @@
           ]
         ],
         "stat": "Sum",
-        "period": 3600,
+        "period": 300,
         "view": "singleValue",
         "setPeriodToTimeRange": true
       }
@@ -38,7 +38,7 @@
       "width": 16,
       "height": 5,
       "properties": {
-        "title": "Donations, requests and completed pickups (per hour)",
+        "title": "Donations, requests and completed pickups (per 5 min)",
         "region": "ap-southeast-2",
         "metrics": [
           [
@@ -55,7 +55,7 @@
           ]
         ],
         "stat": "Sum",
-        "period": 3600,
+        "period": 300,
         "view": "timeSeries"
       }
     },
